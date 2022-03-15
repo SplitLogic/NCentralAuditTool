@@ -389,7 +389,7 @@ $ProcessorListTool={
             }
         }
         # Sleep to mitigate website detecting too many requests
-        Start-Sleep 20s
+        Start-Sleep 20
     }
     $allprocs | Export-Csv C:\temp\Procs.csv -NoTypeInformation -Append
 }
