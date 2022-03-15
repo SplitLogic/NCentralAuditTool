@@ -14,6 +14,7 @@ Still to do:
 3. When running against all customers it runs it twice due to the customer list containing customer and site as seperate entities. Will need a check to see if device exists maybe.
 4. Have difficulty calculating hardware age from processor release - It just does the one and feeds it to all records below.
 5. I want to use the warranty date for the hardware age instead of CPU where possible. Need to program in a way to calculate age from warranty and if the warranty info isnt available use the processor.
+6. Code efficiency sucks - there are better ways to do some of things ive done. Needs tidying, there are repeated functions in the script.
 
 If requested i can provide the AMP's used for the KFM enable check and W11 readyness check. Upload them to this Git
 
