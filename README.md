@@ -1,6 +1,7 @@
 # NCentralAuditTool
 
 This tool is incomplete and is only partially functional.
+![image](https://user-images.githubusercontent.com/1890606/158362984-86e4989e-09fc-40fd-a52c-d389f99c0295.png)
 
 This is designed to pull information from N-Central and export it to a CSV. There is also a function to generate a processor list to calculate hardware age for the audit.
 
