@@ -21,3 +21,5 @@ If requested i can provide the AMP's used for the KFM enable check and W11 ready
 If anyone is able to help develop this further please get in touch. I think the ultimate aim is to make everything work and potentially even get to a GUI.
 
 Not possible without the fantastic PS-NCentral tool you can find more information on here https://github.com/ToschAutomatisering/PS-NCentral. Massive thanks for their work on the module.
+
+Note: Requires Powershell 7.
