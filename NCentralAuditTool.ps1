@@ -608,7 +608,7 @@ $AllCustomerTool={
                 if ($FileExists -eq $True) {
                     Remove-Item $Filepath
                   }
-                $DevicesNotReady | Select-Object -Unique | Export-Csv -notypeinformation "C:\Temp\AllCustomer-W11Readyness.csv"
+                $DevicesNotReady | Export-Csv -notypeinformation "C:\Temp\AllCustomer-W11Readyness.csv"
                 $Excel = New-Object -ComObject Excel.Application
                 $Workbook = $Excel.Workbooks.Open($FilePath)
                 Write-Host "The file has been exported to C:\Temp\AllCustomer-W11Readyness.csv" -ForegroundColor Blue
