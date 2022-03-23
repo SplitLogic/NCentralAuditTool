@@ -603,10 +603,10 @@ $AllCustomerTool={
         $ExportCSV = Read-Host "Do you want to export to CSV? Y/N"
         switch($ExportCSV){
             'y' {
-                Write-Host "The file has been exported to C:\Temp\AllCustomer-W11Readyness.csv" -ForegroundColor Blue
                 $DevicesNotReady | Export-Csv -notypeinformation "C:\Temp\AllCustomer-W11Readyness.csv"
                 $FilePath = "C:\Temp\AllCustomer-W11Readyness.csv"
-                if (Test-Path $Filepath = $True) {
+                $FileExists = Test-Path $FilePath
+                if ($FileExists -eq $True) {
                     Remove-Item $Filepath
                   }
                 $Excel = New-Object -ComObject Excel.Application
