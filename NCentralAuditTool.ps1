@@ -578,37 +578,38 @@ $AllCustomerTool={
             $CustomerID = $customer.customerid
             $Devices = Get-NCDeviceList -customerID $CustomerID
             Foreach ($device in $Devices){
-                $name = $customer.customer
                 $ID = $Device.DeviceID
                 $Device = Get-NCDeviceObject -DeviceID $ID
-                $Row = "" | Select-Object Name,Device,'Windows 11 Ready Status'
-                $row.name = $name
-                $Row.Device = $device.longname
-                $PropertyList = Get-NCDevicePropertyList -DeviceID $id
-                $status = $propertylist.'Windows 11 Ready'
-                if ($status -eq 'Not Ready'){
-                }
-                elseif ($status -eq 'Ready'){
-                    $state = "Windows 11 Ready"
-                }
-                else{
-                    $state = "No Data"
-                }
-                $row.'Windows 11 Ready Status' = $state
-                $row.device
-                $DevicesNotReady += $Row
+                    $Row = "" | Select-Object DeviceID,Customer,Device,'Windows 11 Ready Status'
+                    $customername = $device.customer
+                    $row.Customer = $customername.customername
+                    $Row.Device = $device.longname
+                    $Row.DeviceID = $ID
+                    $PropertyList = Get-NCDevicePropertyList -DeviceID $id
+                    $status = $propertylist.'Windows 11 Ready'
+                    if ($status -eq 'Not Ready'){
+                    }
+                    elseif ($status -eq 'Ready'){
+                        $state = "Windows 11 Ready"
+                    }
+                    else{
+                        $state = "No Data"
+                    }
+                    $row.'Windows 11 Ready Status' = $state
+                    $row.device
+                    $DevicesNotReady += $Row
             }
         }
         $DevicesNotReady | Format-Table
         $ExportCSV = Read-Host "Do you want to export to CSV? Y/N"
         switch($ExportCSV){
             'y' {
-                $FilePath = "C:\Temp\AllCustomer-W11Readyness.csv"
+                $FilePath = "C:\Temp\AllCustomer-W11Readyness1.csv"
                 $FileExists = Test-Path $FilePath
                 if ($FileExists -eq $True) {
                     Remove-Item $Filepath
                   }
-                $DevicesNotReady | Export-Csv -notypeinformation "C:\Temp\AllCustomer-W11Readyness.csv"
+                $DevicesNotReady| Sort-Object -Property DeviceID -Unique | Sort-Object -property Device | Export-Csv -notypeinformation "C:\Temp\AllCustomer-W11Readyness.csv"
                 $Excel = New-Object -ComObject Excel.Application
                 $Workbook = $Excel.Workbooks.Open($FilePath)
                 Write-Host "The file has been exported to C:\Temp\AllCustomer-W11Readyness.csv" -ForegroundColor Blue
