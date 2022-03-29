@@ -109,26 +109,34 @@ $SubFunction1={
 }
 $SubFunction2={
     $DevicesNotReady = @()
-    $CL = Get-NCCustomerList | Select-Object CustomerName,CustomerID
-    foreach ($customer in $cl){
-        $CustomerID = $customer.customerid
-        $ActiveIssues = Get-NCActiveIssuesList -CustomerID $CustomerID | Select-Object Devicename,Servicename,notifstate,customername
-        Foreach ($issue in $ActiveIssues){
-            if ($issue.servicename -eq "Windows 11 Readyness"){
-                $row = ''| Select-Object Name,DeviceName,State
-                $row.devicename = $issue.devicename
-                switch ($issue.notifstate) {
-                4 {$row.state = "Potentially Upgradeable"}
-                5 {$row.State = "Not Ready"}
-                7 {$row.state = "Not Ready"}
-                Default {"Misconfigured"}
-                }
-
-                $name = $Issue.customername
-                $row.name = $name
-                $DevicesNotReady += $row
-            }   
-        }
+    Get-NCCustomerList | Select-Object CustomerName,CustomerID | Format-Table
+    $CustomerID = Read-Host "Please input the customer number:"
+    Write-Host "Please Wait..." -ForegroundColor Green
+    $Devices = Get-NCDeviceList -customerID $CustomerID
+    Foreach ($device in $Devices){
+        $ID = $Device.DeviceID
+        $Device = Get-NCDeviceObject -DeviceID $ID
+            $Row = "" | Select-Object DeviceID,Customer,Device,OS,'Windows 11 Ready Status'
+            $customername = $device.customer
+            $OS = $device.os
+            $row.OS = $OS.reportedos
+            $row.Customer = $customername.customername
+            $Row.Device = $device.longname
+            $Row.DeviceID = $ID
+            $PropertyList = Get-NCDevicePropertyList -DeviceID $id
+            $status = $propertylist.'Windows 11 Ready'
+            if ($status -eq 'Not Ready'){
+                $state = "Not Ready"
+            }
+            elseif ($status -eq 'Ready'){
+                $state = "Windows 11 Ready"
+            }
+            else{
+                $state = "No Data"
+            }
+            $row.'Windows 11 Ready Status' = $state
+            $row.device
+            $DevicesNotReady += $Row
     }
     $DevicesNotReady | Export-Csv C:\Temp\AllCustomers-W11Readyness.csv
     $DevicesNotReady | Format-Table
