@@ -8,12 +8,6 @@ This is designed to pull information from N-Central and export it to a CSV. Ther
 
 Generate your JWT and input your server at the top of the code and you can then use it to pull information.
 
-Still to do:
-2. CPU list is incomplete - need to find a better way to generate a more complete list.
-4. Have difficulty calculating hardware age from processor release - It just does the one and feeds it to all records below.
-5. I want to use the warranty date for the hardware age instead of CPU where possible. Need to program in a way to calculate age from warranty and if the warranty info isnt available use the processor.
-6. Code efficiency sucks - there are better ways to do some of things ive done. Needs tidying, there are repeated functions in the script.
-
 AMP files provided for N-Central property updates.
 
 If anyone is able to help develop this further please get in touch. I think the ultimate aim is to make everything work and potentially even get to a GUI.
