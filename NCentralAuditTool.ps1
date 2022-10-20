@@ -1,4 +1,4 @@
-﻿$JWT = ""
+$JWT = ""
 $ServerFQDN = ""
 New-NCentralConnection -ServerFQDN $ServerFQDN -JWT $JWT
 $SubFunction1={
@@ -99,9 +99,20 @@ $SubFunction1={
         #Append Table
         $List += $Row       
     }
-    $list | Export-Csv -notypeinformation C:\Temp\$customername-DeviceAudit.csv
-    Write-Host "Audit has been saved to C:\Temp\$customername-DeviceAudit.csv" -ForegroundColor Blue
+    $unsortedFP ="C:\Temp\$customername-DeviceAudit-Unsorted.csv"
+    $list | Export-Csv -notypeinformation $UnsortedFP
+    $SortedCSV = Import-CSV $UnsortedFP| Sort-Object -Property ID -Unique
+    Export-CSV -notypeinformation $sortedCSV 
     $FilePath = "C:\Temp\$customername-DeviceAudit.csv"
+    if (Test-Path $Filepath = $True) {
+        Write-Host "Sorted audit has been saved to C:\Temp\$customername-DeviceAudit.csv" -ForegroundColor Blue
+        Remove-Item $Filepath
+        }
+    if (Test-Path $Filepath = $False) {
+    Write-Host "Unable to delete previous file. Please delete and rerun this tool"
+    }
+    Remove-Item $UnsortedFP
+    Import-CSV $
     $Excel = New-Object -ComObject Excel.Application
     $Workbook = $Excel.Workbooks.Open($FilePath)
     $excel.visible = $true
@@ -112,39 +123,45 @@ $SubFunction2={
     Get-NCCustomerList | Select-Object CustomerName,CustomerID | Format-Table
     $CustomerID = Read-Host "Please input the customer number:"
     Write-Host "Please Wait..." -ForegroundColor Green
-    $Devices = Get-NCDeviceList -customerID $CustomerID
-    Foreach ($device in $Devices){
-        $ID = $Device.DeviceID
-        $Device = Get-NCDeviceObject -DeviceID $ID
-            $Row = "" | Select-Object DeviceID,Customer,Device,OS,'Windows 11 Ready Status'
-            $customername = $device.customer
-            $OS = $device.os
-            $row.OS = $OS.reportedos
-            $row.Customer = $customername.customername
+        $Devices = Get-NCDeviceList -customerID $CustomerID
+        Foreach ($device in $Devices){
+            $ID = $Device.DeviceID
+            $CustomerName = $Device.customername
+            $Device = Get-NCDeviceObject -DeviceID $ID
+            $Row = "" | Select-Object CustomerName,Device,'Windows 11 Ready Status'
+            $device.customername
+            $Row.CustomerName = $customername
             $Row.Device = $device.longname
-            $Row.DeviceID = $ID
             $PropertyList = Get-NCDevicePropertyList -DeviceID $id
             $status = $propertylist.'Windows 11 Ready'
-            if ($status -eq 'Not Ready'){
-                $state = "Not Ready"
+            $State = "No Data"
+            if ($device.deviceclass -eq "Servers"){
+                $State = "Server"
             }
-            elseif ($status -eq 'Ready'){
-                $state = "Windows 11 Ready"
-            }
-            else{
-                $state = "No Data"
+            Else{
+                if ($status -eq 'Not Ready'){
+                    $state = "Not Ready"
+                }
+                elseif ($status -eq 'Ready'){
+                    $state = "Windows 11 Ready"
+                }
+                elseif ($status = 'Already Windows 11'){
+                    $state =  "Already Windows 11"
+                }
+                else{
+                    $state = "No Data"
+                }
             }
             $row.'Windows 11 Ready Status' = $state
             $row.device
             $DevicesNotReady += $Row
-    }
-    $DevicesNotReady | Export-Csv C:\Temp\AllCustomers-W11Readyness.csv
+        }
     $DevicesNotReady | Format-Table
     $ExportCSV = Read-Host "Do you want to export to CSV? Y/N"
     switch($ExportCSV){
         'y' {
             Write-Host "The file has been exported to C:\Temp\$name-W11Reayness.csv" -ForegroundColor Blue
-            $FilePath = "C:\Temp\AllCustomers-W11Readyness.csv"
+            $FilePath = "C:\Temp\$name-W11Readyness.csv"
             $Excel = New-Object -ComObject Excel.Application
             $Workbook = $Excel.Workbooks.Open($FilePath)
             Write-Host "That should now be open in Excel for you"
@@ -239,227 +256,238 @@ $InstallModuleFunction={
            }
           }
 }
-$ProcessorListTool={
+$ProcessorListTool={  
     $PLTSubFunction1={
-    if (Test-Path -Path C:\Temp\Procs.csv){
-        Write-Host "YAY Procs.csv Exists"
-        $Master = Import-Csv C:\Temp\Procs.csv
-    }
-    else {
-        Write-Host "I cant find it, where is it?"
-        Write-Host "I'll just make a new one..."
-        $Row = "" | Select-Object Name,Codename,Cores,Clock,Socket,Process,L3Cache,TDP,Released
-        $Row.Name = ""
-        $row.Codename = ""
-        $Row.Cores = ""
-        $Row.Clock = ""
-        $Row.Socket = ""
-        $Row.Process = ""
-        $row.L3Cache = ""
-        $row.TDP = ""
-        $row.Released = ""
-        $row | Export-csv C:\Temp\Procs.csv
-        Write-Host "Done with that... Moving On"
-        $Master = Import-Csv C:\Temp\Procs.csv
-    }
-    #Specify the URLS to pull table data for
-    $urls = @('https://www.techpowerup.com/cpu-specs/?released=2021&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2020&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2019&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2018&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2017&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2016&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2015&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2014&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2013&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2012&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2011&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2010&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2009&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2008&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2007&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2006&sort=name',
-                'https://www.techpowerup.com/cpu-specs/?released=2005&sort=name')
-    # Create the Arrays
-    $allprocs = @()
-    # Begin loop for each url
-    Foreach ($url in $urls){
-        # Grab required info from website
-        $webSite = Invoke-WebRequest -Uri $url
-        $content = $webSite.Content   
-        # Create HTML file Object
-        $HTML = New-Object -Com "HTMLFile"   
-        # Write HTML content according to DOM Level2 
-        $src = [System.Text.Encoding]::Unicode.GetBytes($content)
-        $html.write($src)
-        # Create Processor array
-        $Processors = @()
-        # Select all data withing the td html tag
-        $TDS = $HTML.all.tags("td") | ForEach-Object InnerText   
-        # Set counters for switch and row loop
-        $counter = 1
-        $rowno = 0    
-        # Create table from html tags while applying index to identify single record later
-        ForEach ($TD in $TDS){ 
-            $Row = "" | Select-Object Index,Name,Codename,Cores,Clock,Socket,Process,L3Cache,TDP,Released
-            Switch ($counter){
-                1{
-                    $Row.name = $td
-                    $Row.index = $rowno
-                    $counter++
-                }
-                2{
-                    $row.codename = $td
-                    $Row.index = $rowno
-                    $counter++
-                }
-                3{
-                    $row.cores = $td
-                    $Row.index = $rowno
-                    $counter++
-                }
-                4{
-                    $row.clock = $td
-                    $Row.index = $rowno
-                    $counter++
-                }
-                5{
-                    $row.socket = $td
-                    $Row.index = $rowno
-                    $counter++
-                }
-                6{
-                    $row.process = $td
-                    $Row.index = $rowno
-                    $counter++
-                }
-                7{
-                    $row.L3Cache = $td
-                    $Row.index = $rowno
-                    $counter++
-                }
-                8{
-                    $row.TDP = $td
-                    $Row.index = $rowno
-                    $counter++
-                }
-                9{
-                    try {
-                        $date = [datetime]::ParseExact(($td -replace '(th|st|nd|rd),'), 'MMM d yyyy', [cultureinfo]::InvariantCulture)
-                    }
-                    Catch {
-                        "These are not the dates you're looking for"
-                    }
-                    $row.released = $date
-                    $Row.index = $rowno
-                    $counter = 1
-                    $rowno++
-                }
-            }
-            $Processors += $Row     
+        if (Test-Path -Path C:\Temp\Procs.csv){
+            Write-Host "YAY Procs.csv Exists"
+            $Master = Import-Csv C:\Temp\Procs.csv
         }
-        # Group Rows with same index
-        $RowMasters = $processors | Group-Object Index | Where-Object count -gt 1
-        $process = New-Object System.Collections.ArrayList
-        # Apply rows to single row in array
-        ForEach ($RowMaster in $RowMasters){
-            $process.Add([pscustomobject]@{
-                Index=($rowmaster.Group.Index  | Select-Object -Unique) -as [int];
-                Name=$rowmaster.Group.Name | Select-Object -Unique
-                Codename=$rowmaster.Group.Codename| Select-Object -Unique
-                Cores=$rowmaster.Group.cores | Select-Object -Unique
-                Clock = $rowmaster.Group.clock | Select-Object -Unique
-                Socket= $rowmaster.Group.socket  | Select-Object -Unique
-                Process= $rowmaster.Group.process  | Select-Object -Unique
-                L3Cache= $rowmaster.Group.l3cache | Select-Object -Unique
-                TDP= $rowmaster.Group.tdp  | Select-Object -Unique
-                Released= $rowmaster.Group.released  | Select-Object -Unique })
-            }
-            # add only required information to allprocs master table if it doesnt already exist in the imported list    
-        foreach ($processor in $process){
-            if ($master.name -notcontains $processor.name){
-                Write-Host $processor.name"not in list"
-                $Row = "" | Select-Object Name,Codename,Cores,Clock,Socket,Process,L3Cache,TDP,Released
-                $Row.Name = $Processor.name
-                $row.Codename = $processor.Codename
-                $Row.Cores = $processor.Cores
-                $Row.Clock = $processor.Clock
-                $Row.Socket = $processor.Socket
-                $Row.Process = $processor.Process
-                $row.L3Cache = $processor.L3Cache
-                $row.TDP = $processor.TDP
-                $row.Released = $processor.Released
-                $allprocs += $row
-                Write-Host "Added"$processor.name"to the list"
-            }
-            else{
-                Write-Host $processor.name"already in the list"
-            }
+        else {
+            Write-Host "I cant find it, where is it?"
+            Write-Host "I'll just make a new one..."
+            $Row = "" | Select-Object Name,Codename,Cores,Clock,Socket,Process,L3Cache,TDP,Released
+            $Row.Name = ""
+            $row.Codename = ""
+            $Row.Cores = ""
+            $Row.Clock = ""
+            $Row.Socket = ""
+            $Row.Process = ""
+            $row.L3Cache = ""
+            $row.TDP = ""
+            $row.Released = ""
+            $row | Export-csv C:\Temp\Procs.csv
+            Write-Host "Done with that... Moving On"
+            $Master = Import-Csv C:\Temp\Procs.csv
         }
-        # Sleep to mitigate website detecting too many requests
-        Start-Sleep 20
-    }
-    $allprocs | Export-Csv C:\temp\Procs.csv -NoTypeInformation -Append
-}
-    $PLTSubFunction2={
-        $processor = @()
-        $proc = "" | Select-Object Index,Name,Codename,Cores,Clock,Socket,Process,L3Cache,TDP,Released
-        $Proc.name = Read-Host "Processor Name e.g. Core i7 6700K" -ForegroundColor Green
-        $Proc.name = Read-Host
-        $proc.Codename = Read-Host "Processor Codename e.g. Haswell" -ForegroundColor Green
-        $proc.cores = Read-Host "Processor Cores P/HT e.g. 4/8" -ForegroundColor Green
-        $Proc.Clock = Read-Host "Processor Clock e.g. 2.4 Ghz" -ForegroundColor Green
-        $Proc.Socket = Read-Host "Processor Socket e.g BGA 1499" -ForegroundColor Green
-        $Proc.Process = Read-Host "Processor Process e.g. 10 nm" -ForegroundColor Green
-        $Proc.L3Cache = Read-Host "Processor L3Cache e.g. 8 MB" -ForegroundColor Green
-        $Proc.TDP = Read-Host "Processor TDP e.g. 80 W" -ForegroundColor Green
-        $Proc.Released = Read-Host "Processor Released - Q2 2017 needs changing to 01/04/2017 format" -ForegroundColor Green
-        $processor += $Proc
-        $Processor | Export-Csv C:\temp\Procs.csv -NoTypeInformation -Append
-        Write-Host "Processor added to list"
-    }
-    $ProcessorToolMain={
-        function Show-PLTMenu{
-            param ([string]$Title = 'ProcessorList')
-                Clear-Host
-                Write-Host "==================================================" -ForegroundColor Yellow
-                Write-Host "   _____                                          " -ForegroundColor Red
-                Write-Host "  |  __ \                                         " -ForegroundColor Red
-                Write-Host "  | |__) | __ ___   ___ ___  ___ ___  ___  _ __   " -ForegroundColor Red
-                Write-Host "  |  ___/ '__/ _ \ / __/ _ \/ __/ __|/ _ \| '__|  " -ForegroundColor Red
-                Write-Host "  | |   | | | (_) | (_|  __/\__ \__ \ (_) | |     " -ForegroundColor Red
-                Write-Host "  |_|   |_|  \___/ \___\___||___/___/\___/|_|     " -ForegroundColor Red
-                Write-Host "  | |    (_)   | |                                " -ForegroundColor Blue
-                Write-Host "  | |     _ ___| |_                               " -ForegroundColor Blue
-                Write-Host "  | |    | / __| __|                              " -ForegroundColor Blue      
-                Write-Host "  | |____| \__ \ |_                               " -ForegroundColor Blue                        
-                Write-Host "  |______|_|___/\__|_                             " -ForegroundColor Blue
-                Write-Host "  |__   __|        | |                            " -ForegroundColor Green
-                Write-Host "     | | ___   ___ | |                            " -ForegroundColor Green
-                Write-Host "     | |/ _ \ / _ \| |                            " -ForegroundColor Green
-                Write-Host "     | | (_) | (_) | |                            " -ForegroundColor Green
-                Write-Host "     |_|\___/ \___/|_|       Created By SplitLogic" -ForegroundColor Green
-                Write-Host "==================================================" -ForegroundColor Yellow
-                Write-Host "=======================Menu=======================" -ForegroundColor Yellow
-                Write-Host
-                Write-Host "1: Update processor list from web"
-                Write-Host "2: Update Manually"			
-                Write-Host 
-                Write-Host "q: Go back to Main Menu"
-                Write-Host "==================================================" -ForegroundColor Yellow
-                }
-                do{
-                    Show-PLTMenu
-                    $Selection = Read-Host "Please Make a Selection"
-                    switch ($Selection){
-                        '1'{& $PLTSubFunction1}
-                        '2'{& $PLTSubFunction2}
-                        'q'{return}
+        #Specify the URLS to pull table data for
+        $urls = @('https://www.techpowerup.com/cpu-specs/?released=2022&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2021&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2020&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2019&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2018&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2017&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2016&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2015&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2014&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2013&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2012&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2011&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2010&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2009&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2008&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2007&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2006&sort=name',
+        'https://www.techpowerup.com/cpu-specs/?released=2005&sort=name')
+        $allprocs = @()
+        # Begin loop for each url
+        Foreach ($url in $urls){
+            # Grab required info from website
+            $webSite = Invoke-WebRequest -Uri $url
+            $content = $webSite.Content   
+            # Create HTML file Object
+            $HTML = New-Object -Com "HTMLFile"   
+            # Write HTML content according to DOM Level2 
+            $src = [System.Text.Encoding]::Unicode.GetBytes($content)
+            $html.write($src)
+            # Create Processor array
+            $Processors = @()
+            # Select all data withing the td html tag
+            $TDS = $HTML.all.tags("td") | ForEach-Object InnerText
+            # Set counters for switch and row loop
+            $counter = 1
+            $rowno = 0    
+            # Create table from html tags while applying index to identify single record later
+            ForEach ($TD in $TDS){ 
+                $Row = "" | Select-Object Index,Name,Codename,Cores,Clock,Socket,Process,L3Cache,TDP,Released
+                Switch ($counter){
+                    1{
+                        if ($td -like "*Edited*"){
+                            $row.index ="1"
+                        }
+                        else {
+                        $Row.name = $td
+                        $Row.index = $rowno
+                        $counter++
+                        }
+                    }
+                    2{
+                        $row.codename = $td
+                        $Row.index = $rowno
+                        $counter++
+                    }
+                    3{
+                        $row.cores = $td
+                        $Row.index = $rowno
+                        $counter++
+                    }
+                    4{
+                        $row.clock = $td
+                        $Row.index = $rowno
+                        $counter++
+                    }
+                    5{
+                        $row.socket = $td
+                        $Row.index = $rowno
+                        $counter++
+                    }
+                    6{
+                        $row.process = $td
+                        $Row.index = $rowno
+                        $counter++
+                    }
+                    7{
+                        $row.L3Cache = $td
+                        $Row.index = $rowno
+                        $counter++
+                    }
+                    8{
+                        $row.TDP = $td
+                        $Row.index = $rowno
+                        $counter++
+                    }
+                    9{
+                        try {
+                            $date = [datetime]::ParseExact(($td -replace '(th|st|nd|rd),'), 'MMM d yyyy', [cultureinfo]::InvariantCulture)
+                        }
+                        Catch {
+                            Write-Host "These are not the dates you're looking for"
+                            try{
+                                $date = [DatetIme]$td
+                            }
+                            Catch{
+                                Write-Host "That didnt work, this shits broken"
+                            }
+                        }
+                        $row.released = $date
+                        $Row.index = $rowno
+                        $counter = 1
+                        $rowno++
                     }
                 }
-                until ($input -eq 'q')
+                $Processors += $Row     
+            }
+            # Group Rows with same index
+            $RowMasters = $processors | Group-Object Index | Where-Object count -gt 1
+            $process = New-Object System.Collections.ArrayList
+            # Apply rows to single row in array
+            ForEach ($RowMaster in $RowMasters){
+                $process.Add([pscustomobject]@{
+                    Index=($rowmaster.Group.Index  | Select-Object -Unique) -as [int];
+                    Name=$rowmaster.Group.Name | Select-Object -Unique
+                    Codename=$rowmaster.Group.Codename| Select-Object -Unique
+                    Cores=$rowmaster.Group.cores | Select-Object -Unique
+                    Clock = $rowmaster.Group.clock | Select-Object -Unique
+                    Socket= $rowmaster.Group.socket  | Select-Object -Unique
+                    Process= $rowmaster.Group.process  | Select-Object -Unique
+                    L3Cache= $rowmaster.Group.l3cache | Select-Object -Unique
+                    TDP= $rowmaster.Group.tdp  | Select-Object -Unique
+                    Released= $rowmaster.Group.released  | Select-Object -Unique })
+                }
+                # add only required information to allprocs master table if it doesnt already exist in the imported list    
+            foreach ($processor in $process){
+                if ($master.name -notcontains $processor.name){
+                    Write-Host $processor.name"not in list"
+                    $Row = "" | Select-Object Name,Codename,Cores,Clock,Socket,Process,L3Cache,TDP,Released
+                    $Row.Name = $Processor.name
+                    $row.Codename = $processor.Codename
+                    $Row.Cores = $processor.Cores
+                    $Row.Clock = $processor.Clock
+                    $Row.Socket = $processor.Socket
+                    $Row.Process = $processor.Process
+                    $row.L3Cache = $processor.L3Cache
+                    $row.TDP = $processor.TDP
+                    $row.Released = $processor.Released
+                    $allprocs += $row
+                    Write-Host "Added"$processor.name"to the list"
+                }
+                else{
+                    Write-Host $processor.name"already in the list"
+                }
+            }
+            # Sleep to mitigate website detecting too many requests
+            Start-Sleep 20s
         }
-        & $ProcessorToolMain
+        $allprocs | Export-Csv C:\temp\procs-test.csv -NoTypeInformation -Append
+        }
+        $PLTSubFunction2={
+            $processor = @()
+            $proc = "" | Select-Object Index,Name,Codename,Cores,Clock,Socket,Process,L3Cache,TDP,Released
+            $Proc.name = Read-Host "Processor Name e.g. Core i7 6700K" -ForegroundColor Green
+            $Proc.name = Read-Host
+            $proc.Codename = Read-Host "Processor Codename e.g. Haswell" -ForegroundColor Green
+            $proc.cores = Read-Host "Processor Cores P/HT e.g. 4/8" -ForegroundColor Green
+            $Proc.Clock = Read-Host "Processor Clock e.g. 2.4 Ghz" -ForegroundColor Green
+            $Proc.Socket = Read-Host "Processor Socket e.g BGA 1499" -ForegroundColor Green
+            $Proc.Process = Read-Host "Processor Process e.g. 10 nm" -ForegroundColor Green
+            $Proc.L3Cache = Read-Host "Processor L3Cache e.g. 8 MB" -ForegroundColor Green
+            $Proc.TDP = Read-Host "Processor TDP e.g. 80 W" -ForegroundColor Green
+            $Proc.Released = Read-Host "Processor Released - Q2 2017 needs changing to 01/04/2017 format" -ForegroundColor Green
+            $processor += $Proc
+            $Processor | Export-Csv C:\temp\Procs.csv -NoTypeInformation -Append
+            Write-Host "Processor added to list"
+        }
+        $ProcessorToolMain={
+            function Show-PLTMenu{
+                param ([string]$Title = 'ProcessorList')
+                    Clear-Host
+                    Write-Host "==================================================" -ForegroundColor Yellow
+                    Write-Host "   _____                                          " -ForegroundColor Red
+                    Write-Host "  |  __ \                                         " -ForegroundColor Red
+                    Write-Host "  | |__) | __ ___   ___ ___  ___ ___  ___  _ __   " -ForegroundColor Red
+                    Write-Host "  |  ___/ '__/ _ \ / __/ _ \/ __/ __|/ _ \| '__|  " -ForegroundColor Red
+                    Write-Host "  | |   | | | (_) | (_|  __/\__ \__ \ (_) | |     " -ForegroundColor Red
+                    Write-Host "  |_|   |_|  \___/ \___\___||___/___/\___/|_|     " -ForegroundColor Red
+                    Write-Host "  | |    (_)   | |                                " -ForegroundColor Blue
+                    Write-Host "  | |     _ ___| |_                               " -ForegroundColor Blue
+                    Write-Host "  | |    | / __| __|                              " -ForegroundColor Blue      
+                    Write-Host "  | |____| \__ \ |_                               " -ForegroundColor Blue                        
+                    Write-Host "  |______|_|___/\__|_                             " -ForegroundColor Blue
+                    Write-Host "  |__   __|        | |                            " -ForegroundColor Green
+                    Write-Host "     | | ___   ___ | |                            " -ForegroundColor Green
+                    Write-Host "     | |/ _ \ / _ \| |                            " -ForegroundColor Green
+                    Write-Host "     | | (_) | (_) | |                            " -ForegroundColor Green
+                    Write-Host "     |_|\___/ \___/|_|       Created By SplitLogic" -ForegroundColor Green
+                    Write-Host "==================================================" -ForegroundColor Yellow
+                    Write-Host "=======================Menu=======================" -ForegroundColor Yellow
+                    Write-Host
+                    Write-Host "1: Update processor list from web"
+                    Write-Host "2: Update Manually"			
+                    Write-Host 
+                    Write-Host "q: Go back to Main Menu"
+                    Write-Host "==================================================" -ForegroundColor Yellow
+                    }
+                    do{
+                        Show-PLTMenu
+                        $Selection = Read-Host "Please Make a Selection"
+                        switch ($Selection){
+                            '1'{& $PLTSubFunction1}
+                            '2'{& $PLTSubFunction2}
+                            'q'{return}
+                        }
+                    }
+                    until ($input -eq 'q')
+            }
+            & $ProcessorToolMain        
 }
 $AllCustomerTool={
     $ALTSubFunction1={
@@ -564,15 +592,20 @@ $AllCustomerTool={
                 $List += $Row       
             }
         }
-        $list | Export-Csv -notypeinformation C:\Temp\AllSite-DeviceAudit.csv
-        Write-Host "Audit has been saved to C:\Temp\AllSite-DeviceAudit.csv" -ForegroundColor Blue
+        $unsortedFP ="C:\Temp\AllSite-DeviceAudit-Unsorted.csv"
+        $list | Export-Csv -notypeinformation $UnsortedFP
+        $SortedCSV = Import-CSV $UnsortedFP| Sort-Object -Property ID -Unique
+        Export-CSV -notypeinformation $sortedCSV 
         $FilePath = "C:\Temp\AllSite-DeviceAudit.csv"
         if (Test-Path $Filepath = $True) {
+            Write-Host "Sorted audit has been saved to C:\Temp\AllSite-DeviceAudit.csv" -ForegroundColor Blue
             Remove-Item $Filepath
           }
         if (Test-Path $Filepath = $False) {
         Write-Host "Unable to delete previous file. Please delete and rerun this tool"
         }
+        Remove-Item $UnsortedFP
+        Import-CSV $
         $Excel = New-Object -ComObject Excel.Application
         $Workbook = $Excel.Workbooks.Open($FilePath)
         $excel.visible = $true
@@ -587,41 +620,30 @@ $AllCustomerTool={
             $Devices = Get-NCDeviceList -customerID $CustomerID
             Foreach ($device in $Devices){
                 $ID = $Device.DeviceID
+                $CustomerName = $Device.customername
                 $Device = Get-NCDeviceObject -DeviceID $ID
-                    $Row = "" | Select-Object DeviceID,Customer,Device,'Windows 11 Ready Status'
-                    $customername = $device.customer
-                    $row.Customer = $customername.customername
-                    $Row.Device = $device.longname
-                    $Row.DeviceID = $ID
-                    $PropertyList = Get-NCDevicePropertyList -DeviceID $id
-                    $status = $propertylist.'Windows 11 Ready'
-                    if ($status -eq 'Not Ready'){
-                    }
-                    elseif ($status -eq 'Ready'){
-                        $state = "Windows 11 Ready"
-                    }
-                    else{
-                        $state = "No Data"
-                    }
-                    $row.'Windows 11 Ready Status' = $state
-                    $row.device
-                    $DevicesNotReady += $Row
+                $Row = "" | Select-Object CustomerName,Device,'Windows 11 Ready Status'
+                $row.CustomerName = $CustomerName
+                $Row.Device = $device.longname
+                $PropertyList = Get-NCDevicePropertyList -DeviceID $id
+                $row.'Windows 11 Ready Status' = $propertylist.'Windows 11 Ready'
+                $row.device
+                $DevicesNotReady += $Row
             }
         }
         $DevicesNotReady | Format-Table
         $ExportCSV = Read-Host "Do you want to export to CSV? Y/N"
         switch($ExportCSV){
             'y' {
-                $FilePath = "C:\Temp\AllCustomer-W11Readyness1.csv"
-                $FileExists = Test-Path $FilePath
-                if ($FileExists -eq $True) {
+                $FilePath = "C:\Temp\AllCustomer-W11Readyness.csv"
+                if (Test-Path $Filepath) {
                     Remove-Item $Filepath
                   }
-                $DevicesNotReady| Sort-Object -Property DeviceID -Unique | Sort-Object -property Device | Export-Csv -notypeinformation "C:\Temp\AllCustomer-W11Readyness.csv"
-                $Excel = New-Object -ComObject Excel.Application
-                $Workbook = $Excel.Workbooks.Open($FilePath)
+                $TempFilePath = "C:\Temp\tmpAllCustomer-W11Readyness.csv"
+                $DevicesNotReady | Export-Csv -notypeinformation $TempFilePath
+                $SortedCSV = Import-CSV $TempFilePath | Sort-Object -Property ID -Unique
+                $SortedCSV | Export-Csv -notypeinformation "C:\Temp\AllCustomer-W11Readyness.csv"
                 Write-Host "The file has been exported to C:\Temp\AllCustomer-W11Readyness.csv" -ForegroundColor Blue
-                Write-Host "That should now be open in Excel for you"
                 Read-host -prompt "Press any key to continue"
             }
             'n' {
@@ -692,7 +714,7 @@ $MainFunction={
                 Write-Host "     | | ___   ___ | |                            " -ForegroundColor Green
                 Write-Host "     | |/ _ \ / _ \| |                            " -ForegroundColor Green
                 Write-Host "     | | (_) | (_) | |                            " -ForegroundColor Green
-                Write-Host "     |_|\___/ \___/|_|       Created By SplitLogic" -ForegroundColor Green
+                Write-Host "     |_|\___/ \___/|_|         Created By SplitLogic" -ForegroundColor Green
                 Write-Host "==================================================" -ForegroundColor Yellow
                 Write-Host "=======================Menu=======================" -ForegroundColor Yellow
                 Write-Host "1: Customer Device Audit"
