@@ -99,19 +99,16 @@ $SubFunction1={
         #Append Table
         $List += $Row       
     }
-    $unsortedFP ="C:\Temp\$customername-DeviceAudit-Unsorted.csv"
-    $list | Export-Csv -notypeinformation $UnsortedFP
-    $SortedCSV = Import-CSV $UnsortedFP| Sort-Object -Property ID -Unique
-    Export-CSV -notypeinformation $sortedCSV 
     $FilePath = "C:\Temp\$customername-DeviceAudit.csv"
     if (Test-Path $Filepath = $True) {
+        $list | Export-Csv -notypeinformation $FilePath
+        Import-Csv (Get-ChildItem $Filepath) | Sort-Object -Unique ID | Export-Csv $Filepath -NoClobber -NoTypeInformation
         Write-Host "Sorted audit has been saved to C:\Temp\$customername-DeviceAudit.csv" -ForegroundColor Blue
         Remove-Item $Filepath
         }
     if (Test-Path $Filepath = $False) {
     Write-Host "Unable to delete previous file. Please delete and rerun this tool"
     }
-    Remove-Item $UnsortedFP
     Import-CSV $
     $Excel = New-Object -ComObject Excel.Application
     $Workbook = $Excel.Workbooks.Open($FilePath)
@@ -162,6 +159,8 @@ $SubFunction2={
         'y' {
             Write-Host "The file has been exported to C:\Temp\$name-W11Reayness.csv" -ForegroundColor Blue
             $FilePath = "C:\Temp\$name-W11Readyness.csv"
+            $DevicesNotReady| Export-Csv -notypeinformation $FilePath
+            Import-Csv (Get-ChildItem $Filepath) | Sort-Object -Unique ID | Export-Csv $Filepath -NoClobber -NoTypeInformation
             $Excel = New-Object -ComObject Excel.Application
             $Workbook = $Excel.Workbooks.Open($FilePath)
             Write-Host "That should now be open in Excel for you"
@@ -205,7 +204,8 @@ $SubFunction3={
     $ExportCSV = Read-Host "Do you want to export to CSV? Y/N"
     switch($ExportCSV){
         'y' {
-            $list | Export-Csv -notypeinformation C:\Temp\$customername-KFMStatus.csv
+            $list | Export-Csv -notypeinformation $FilePath
+            Import-Csv (Get-ChildItem $Filepath) | Sort-Object -Unique ID | Export-Csv $Filepath -NoClobber -NoTypeInformation
             Write-Host "The file has been exported to C:\Temp\$name-KFMStatus.csv" -ForegroundColor Blue
             $FilePath = "C:\Temp\$name-KFMStatus.csv"
             $Excel = New-Object -ComObject Excel.Application
@@ -427,7 +427,7 @@ $ProcessorListTool={
             # Sleep to mitigate website detecting too many requests
             Start-Sleep 20s
         }
-        $allprocs | Export-Csv C:\temp\procs-test.csv -NoTypeInformation -Append
+        $allprocs | Export-Csv C:\temp\procs.csv -NoTypeInformation -Append
         }
         $PLTSubFunction2={
             $processor = @()
@@ -466,7 +466,7 @@ $ProcessorListTool={
                     Write-Host "     | | ___   ___ | |                            " -ForegroundColor Green
                     Write-Host "     | |/ _ \ / _ \| |                            " -ForegroundColor Green
                     Write-Host "     | | (_) | (_) | |                            " -ForegroundColor Green
-                    Write-Host "     |_|\___/ \___/|_|       Created By SplitLogic" -ForegroundColor Green
+                    Write-Host "     |_|\___/ \___/|_|         Created By Tom Hyde" -ForegroundColor Green
                     Write-Host "==================================================" -ForegroundColor Yellow
                     Write-Host "=======================Menu=======================" -ForegroundColor Yellow
                     Write-Host
@@ -592,20 +592,17 @@ $AllCustomerTool={
                 $List += $Row       
             }
         }
-        $unsortedFP ="C:\Temp\AllSite-DeviceAudit-Unsorted.csv"
-        $list | Export-Csv -notypeinformation $UnsortedFP
-        $SortedCSV = Import-CSV $UnsortedFP| Sort-Object -Property ID -Unique
-        Export-CSV -notypeinformation $sortedCSV 
         $FilePath = "C:\Temp\AllSite-DeviceAudit.csv"
         if (Test-Path $Filepath = $True) {
             Write-Host "Sorted audit has been saved to C:\Temp\AllSite-DeviceAudit.csv" -ForegroundColor Blue
             Remove-Item $Filepath
+            $list | Export-Csv -notypeinformation $FilePath
+            Import-Csv (Get-ChildItem $Filepath) | Sort-Object -Unique ID | Export-Csv $Filepath -NoClobber -NoTypeInformation
           }
         if (Test-Path $Filepath = $False) {
         Write-Host "Unable to delete previous file. Please delete and rerun this tool"
         }
-        Remove-Item $UnsortedFP
-        Import-CSV $
+        Import-CSV $FilePath
         $Excel = New-Object -ComObject Excel.Application
         $Workbook = $Excel.Workbooks.Open($FilePath)
         $excel.visible = $true
@@ -637,15 +634,12 @@ $AllCustomerTool={
         switch($ExportCSV){
             'y' {
                 $FilePath = "C:\Temp\AllCustomer-W11Readyness.csv"
-                if (Test-Path $Filepath) {
-                    Remove-Item $Filepath
-                  }
-                $TempFilePath = "C:\Temp\tmpAllCustomer-W11Readyness.csv"
-                $DevicesNotReady | Export-Csv -notypeinformation $TempFilePath
-                $SortedCSV = Import-CSV $TempFilePath | Sort-Object -Property ID -Unique
-                $SortedCSV | Export-Csv -notypeinformation "C:\Temp\AllCustomer-W11Readyness.csv"
-                Write-Host "The file has been exported to C:\Temp\AllCustomer-W11Readyness.csv" -ForegroundColor Blue
-                Read-host -prompt "Press any key to continue"
+                if (Test-Path $Filepath = $True) {
+                Write-Host "Sorted audit has been saved to C:\Temp\AllSite-W11Readyness.csv" -ForegroundColor Blue
+                Remove-Item $Filepath
+                $list | Export-Csv -notypeinformation $FilePath
+                Import-Csv (Get-ChildItem $Filepath) | Sort-Object -Unique ID | Export-Csv $Filepath -NoClobber -NoTypeInformation
+                }
             }
             'n' {
                 Read-host -prompt "Press any key to continue"
@@ -672,7 +666,7 @@ $AllCustomerTool={
                 Write-Host "     | | ___   ___ | |                            " -ForegroundColor Green
                 Write-Host "     | |/ _ \ / _ \| |                            " -ForegroundColor Green
                 Write-Host "     | | (_) | (_) | |                            " -ForegroundColor Green
-                Write-Host "     |_|\___/ \___/|_|       Created By SplitLogic" -ForegroundColor Green
+                Write-Host "     |_|\___/ \___/|_|         Created By Tom Hyde" -ForegroundColor Green
                 Write-Host "==================================================" -ForegroundColor Yellow
                 Write-Host "=======================Menu=======================" -ForegroundColor Yellow
                 Write-Host
@@ -715,7 +709,7 @@ $MainFunction={
                 Write-Host "     | | ___   ___ | |                            " -ForegroundColor Green
                 Write-Host "     | |/ _ \ / _ \| |                            " -ForegroundColor Green
                 Write-Host "     | | (_) | (_) | |                            " -ForegroundColor Green
-                Write-Host "     |_|\___/ \___/|_|         Created By SplitLogic" -ForegroundColor Green
+                Write-Host "     |_|\___/ \___/|_|         Created By Tom Hyde" -ForegroundColor Green
                 Write-Host "==================================================" -ForegroundColor Yellow
                 Write-Host "=======================Menu=======================" -ForegroundColor Yellow
                 Write-Host "1: Customer Device Audit"
