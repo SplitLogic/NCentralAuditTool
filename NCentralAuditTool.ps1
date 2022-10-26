@@ -466,7 +466,7 @@ $ProcessorListTool={
                     Write-Host "     | | ___   ___ | |                            " -ForegroundColor Green
                     Write-Host "     | |/ _ \ / _ \| |                            " -ForegroundColor Green
                     Write-Host "     | | (_) | (_) | |                            " -ForegroundColor Green
-                    Write-Host "     |_|\___/ \___/|_|         Created By Tom Hyde" -ForegroundColor Green
+                    Write-Host "     |_|\___/ \___/|_|       Created By SplitLogic" -ForegroundColor Green
                     Write-Host "==================================================" -ForegroundColor Yellow
                     Write-Host "=======================Menu=======================" -ForegroundColor Yellow
                     Write-Host
@@ -666,7 +666,7 @@ $AllCustomerTool={
                 Write-Host "     | | ___   ___ | |                            " -ForegroundColor Green
                 Write-Host "     | |/ _ \ / _ \| |                            " -ForegroundColor Green
                 Write-Host "     | | (_) | (_) | |                            " -ForegroundColor Green
-                Write-Host "     |_|\___/ \___/|_|         Created By Tom Hyde" -ForegroundColor Green
+                Write-Host "     |_|\___/ \___/|_|       Created By SplitLogic" -ForegroundColor Green
                 Write-Host "==================================================" -ForegroundColor Yellow
                 Write-Host "=======================Menu=======================" -ForegroundColor Yellow
                 Write-Host
@@ -709,7 +709,7 @@ $MainFunction={
                 Write-Host "     | | ___   ___ | |                            " -ForegroundColor Green
                 Write-Host "     | |/ _ \ / _ \| |                            " -ForegroundColor Green
                 Write-Host "     | | (_) | (_) | |                            " -ForegroundColor Green
-                Write-Host "     |_|\___/ \___/|_|         Created By Tom Hyde" -ForegroundColor Green
+                Write-Host "     |_|\___/ \___/|_|       Created By SplitLogic" -ForegroundColor Green
                 Write-Host "==================================================" -ForegroundColor Yellow
                 Write-Host "=======================Menu=======================" -ForegroundColor Yellow
                 Write-Host "1: Customer Device Audit"
